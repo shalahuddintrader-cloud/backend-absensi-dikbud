@@ -62,4 +62,14 @@ router.get ('/import/template', authenticate, authorize('admin','pimpinan'), imp
 router.get('/export/rekap-bulanan',  authenticate, authorize('admin','pimpinan'), exportCtrl.exportRekapBulanan);
 router.get('/export/laporan-harian', authenticate, authorize('admin','pimpinan'), exportCtrl.exportLaporanHarian);
 router.get('/export/laporan-bulanan-pegawai',  authenticate, authorize('admin','pimpinan'),  exportCtrl.exportLaporanBulananPegawai);
+// ── NOTIFIKASI ────────────────────────────────────────────────
+const notifCtrl = require('../controllers/notifikasiController');
+router.get('/notifikasi',              authenticate, notifCtrl.getNotifikasi);
+router.patch('/notifikasi/:id/read',    authenticate, notifCtrl.tandaiDibaca);
+router.patch('/notifikasi/read-all',   authenticate, notifCtrl.tandaiSemuaDibaca);
+router.get('/notifikasi/unread-count', authenticate, notifCtrl.getJumlahBelumDibaca);
+router.post('/device/token',           authenticate, notifCtrl.simpanFcmToken);
+
+// ── IZIN BATAL ─────────────────────────────────────────────────
+router.delete('/izin/:id', authenticate, izinCtrl.batalkanIzin);
 module.exports = router;

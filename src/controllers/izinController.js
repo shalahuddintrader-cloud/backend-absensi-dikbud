@@ -92,3 +92,20 @@ exports.approveIzin = async (req, res) => {
     return error(res, 'Server error', 500);
   }
 };
+
+exports.batalkanIzin = async (req, res) => {
+  try {
+    const [rows] = await query('SELECT * FROM pengajuan_izin WHERE id_izin = ? AND id_pengguna = ?', [req.params.id, req.user.id]);
+    if (!rows.length) return error(res, 'Pengajuan tidak ditemukan', 404);
+    if (rows[0].status !== 'pending') return error(res, 'Tidak dapat membatalkan izin yang sudah diproses', 400);
+
+    await query('DELETE FROM pengajuan_izin WHERE id_izin = ?', [req.params.id]);
+    await query(
+      "UPDATE absensi SET status='alpha', keterangan=NULL WHERE id_pengguna=? AND tanggal BETWEEN ? AND ? AND keterangan LIKE ?",
+      [req.user.id, rows[0].tanggal_mulai, rows[0].tanggal_akhir, `%#${req.params.id}%`]
+    );
+    return success(res, null, 'Izin berhasil dibatalkan');
+  } catch (e) {
+    return error(res, 'Server error', 500);
+  }
+};
