@@ -164,7 +164,11 @@ const migrate = async () => {
   process.exit(0);
 };
 
-migrate().catch(err => {
-  console.error('❌ Migration failed:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  migrate().catch(err => {
+    console.error('❌ Migration failed:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = { migrate };
