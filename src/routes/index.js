@@ -72,4 +72,15 @@ router.post('/device/token',           authenticate, notifCtrl.simpanFcmToken);
 
 // ── IZIN BATAL ─────────────────────────────────────────────────
 router.delete('/izin/:id', authenticate, izinCtrl.batalkanIzin);
+
+// ── MIGRATE ────────────────────────────────────────────────────
+const { migrate } = require('../config/migrate');
+router.post('/migrate', async (req, res) => {
+  try {
+    await migrate();
+    res.json({ status: 'success', message: 'Migration completed' });
+  } catch (e) {
+    res.status(500).json({ status: 'error', message: e.message });
+  }
+});
 module.exports = router;

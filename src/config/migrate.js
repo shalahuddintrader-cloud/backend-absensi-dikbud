@@ -2,15 +2,30 @@ require('dotenv').config();
 const mysql = require('mysql2/promise');
 
 const migrate = async () => {
-  const db = await mysql.createConnection({
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT) || 3306,
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    multipleStatements: true,
-  });
+  let cfg;
+  if (process.env.DATABASE_URL) {
+    const parsed = new URL(process.env.DATABASE_URL);
+    cfg = {
+      host: parsed.hostname,
+      port: parseInt(parsed.port) || 3306,
+      user: parsed.username,
+      password: parsed.password,
+      database: parsed.pathname.replace('/', ''),
+      multipleStatements: true,
+    };
+    if (parsed.searchParams.has('sslmode')) cfg.ssl = {};
+  } else {
+    cfg = {
+      host: process.env.DB_HOST || 'localhost',
+      port: parseInt(process.env.DB_PORT) || 3306,
+      user: process.env.DB_USER || 'root',
+      password: process.env.DB_PASSWORD || '',
+      multipleStatements: true,
+    };
+  }
+  const db = await mysql.createConnection(cfg);
 
-  const dbName = process.env.DB_NAME || 'db_absensi';
+  const dbName = cfg.database || process.env.DB_NAME || 'db_absensi';
 
   await db.query(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
   await db.query(`USE \`${dbName}\``);

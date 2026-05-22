@@ -5,13 +5,15 @@ let db;
 function getDbConfig() {
   if (process.env.DATABASE_URL) {
     const parsed = new URL(process.env.DATABASE_URL);
-    return {
+    const cfg = {
       host: parsed.hostname,
       port: parseInt(parsed.port) || 3306,
       database: parsed.pathname.replace('/', ''),
       user: parsed.username,
       password: parsed.password,
     };
+    if (parsed.searchParams.has('sslmode')) cfg.ssl = {};
+    return cfg;
   }
   return {
     host: process.env.DB_HOST || 'localhost',
