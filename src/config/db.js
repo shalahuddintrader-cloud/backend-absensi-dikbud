@@ -2,18 +2,35 @@ const mysql = require('mysql2/promise');
 
 let db;
 
-const connectDB = async () => {
-  db = await mysql.createPool({
-    host: process.env.DB_HOST,
+function getDbConfig() {
+  if (process.env.DATABASE_URL) {
+    const parsed = new URL(process.env.DATABASE_URL);
+    return {
+      host: parsed.hostname,
+      port: parseInt(parsed.port) || 3306,
+      database: parsed.pathname.replace('/', ''),
+      user: parsed.username,
+      password: parsed.password,
+    };
+  }
+  return {
+    host: process.env.DB_HOST || 'localhost',
     port: parseInt(process.env.DB_PORT) || 3306,
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME || 'db_absensi',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || '',
+  };
+}
+
+const connectDB = async () => {
+  const cfg = getDbConfig();
+  db = await mysql.createPool({
+    ...cfg,
     waitForConnections: true,
     connectionLimit: 20,
     queueLimit: 0,
     authPlugins: {
-      caching_sha2_password: () => () => Buffer.from(process.env.DB_PASSWORD + '\0'),
+      caching_sha2_password: () => () => Buffer.from(cfg.password + '\0'),
     },
   });
 
